@@ -2,12 +2,13 @@ package main
 
 import "math/rand"
 
+// Default value for int64 is 0 in go
 type Account struct {
-	ID        int
-	FirstName string
-	LastName  string
-	Number    int64
-	Balance   int64 // Default value for int64 is 0 in go
+	ID        int    `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Number    int64  `json:"number"`
+	Balance   int64  `json:"balance"`
 }
 
 func NewAccount(firstName, lastName string) *Account {
