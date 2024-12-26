@@ -11,8 +11,9 @@ import (
 
 // write json
 func WriteJSON(w http.ResponseWriter, status int, v any) error {
+	// w.Header().Set("Content-Type", "application/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(v)
 }
 
@@ -37,11 +38,13 @@ func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 
 type APIServer struct {
 	listenAddr string
+	store      Storage
 }
 
-func NewAPIserver(listenAddr string) *APIServer {
+func NewAPIserver(listenAddr string, store Storage) *APIServer {
 	return &APIServer{
 		listenAddr: listenAddr,
+		store:      store,
 	}
 }
 
@@ -52,6 +55,8 @@ func (s *APIServer) Run() {
 	// s.handleAccount without parentheses is passing a reference to the function
 	// This allows makeHTTPHandleFunc to call the function later when needed.
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
+
+	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccount))
 
 	log.Println("JSON API server running on port: ", s.listenAddr)
 
@@ -86,6 +91,13 @@ func (s *APIServer) handleAccount(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (s *APIServer) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
+	// // Extracts route variables (parameters) from the HTTP request r.
+	// vars := mux.Vars(r)
+
+	// // Retrieves the value of a specific route variable (in this case, id) from the map returned by mux.Vars(r).
+	// id := mux.Vars(r)["id"]
+	// fmt.Fprintf(w, "Account ID: %s", id)
+
 	account := NewAccount("John", "Doe")
 
 	return WriteJSON(w, http.StatusOK, account)
