@@ -104,7 +104,20 @@ func (s *APIServer) handleGetAccount(w http.ResponseWriter, r *http.Request) err
 }
 
 func (s *APIServer) handleCreteAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	createAccountReq := new(CreateAccountRequest)
+	if err := json.NewDecoder(r.Body).Decode(createAccountReq); err != nil {
+		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+	}
+
+	account := NewAccount(createAccountReq.FirstName, createAccountReq.LastName)
+	if err := s.store.CreateAccount(account); err != nil {
+		return WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	fmt.Printf("Created account: %+v\n", account)
+
+	// Return the created account as a JSON response
+	return WriteJSON(w, http.StatusOK, account)
 }
 
 func (s *APIServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/lib/pq"
 )
@@ -50,11 +51,32 @@ func (s *PostgresStorage) createAccountTable() error {
 	return err
 }
 
-func (s *PostgresStorage) CreateAccount(a *Account) error {
+func (s *PostgresStorage) CreateAccount(account *Account) error {
+	query := `INSERT INTO account (first_name, last_name, number, balance, created_at) 
+              VALUES ($1, $2, $3, $4, $5) RETURNING id`
+
+	// Execute the query and scan the generated ID into the account
+	err := s.db.QueryRow(
+		query,
+		account.FirstName,
+		account.LastName,
+		account.Number,
+		account.Balance,
+		account.CreatedAt,
+	).Scan(&account.ID)
+
+	if err != nil {
+		fmt.Printf("Error inserting account: %v\n", err)
+		return err
+	}
+
+	// Print the account data for debugging purposes
+	fmt.Printf("Created account: %+v\n", account)
+
 	return nil
 }
 
-func (s *PostgresStorage) UpdateAccount(a *Account) error {
+func (s *PostgresStorage) UpdateAccount(acount *Account) error {
 	return nil
 }
 
