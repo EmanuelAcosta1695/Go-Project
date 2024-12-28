@@ -56,7 +56,7 @@ func (s *APIServer) Run() {
 	// This allows makeHTTPHandleFunc to call the function later when needed.
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
 
-	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccount))
+	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccountById))
 
 	log.Println("JSON API server running on port: ", s.listenAddr)
 
@@ -75,9 +75,6 @@ func (s *APIServer) handleAccount(w http.ResponseWriter, r *http.Request) error 
 	if r.Method == "DELETE" {
 		return s.handleDeleteAccount(w, r)
 	}
-	if r.Method == "GET" {
-		return s.handleGetAccount(w, r)
-	}
 
 	/*
 		The fmt package in Go provides formatted I/O functions,
@@ -91,6 +88,15 @@ func (s *APIServer) handleAccount(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (s *APIServer) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
+	accounts, err := s.store.GetAccounts()
+	if err != nil {
+		return err
+	}
+
+	return WriteJSON(w, http.StatusOK, accounts)
+}
+
+func (s *APIServer) handleGetAccountById(w http.ResponseWriter, r *http.Request) error {
 	// // Extracts route variables (parameters) from the HTTP request r.
 	// vars := mux.Vars(r)
 

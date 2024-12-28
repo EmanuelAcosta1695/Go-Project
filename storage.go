@@ -11,6 +11,7 @@ type Storage interface {
 	CreateAccount(*Account) error // return an error
 	DeleteAccount(int) error
 	UpdateAccount(*Account) error
+	GetAccounts() ([]*Account, error)     // return a slice of pointers to Account and an error
 	GetAccountByID(int) (*Account, error) // return a pointer to Account and an error
 }
 
@@ -86,4 +87,32 @@ func (s *PostgresStorage) DeleteAccount(id int) error {
 
 func (s *PostgresStorage) GetAccountByID(id int) (*Account, error) {
 	return nil, nil
+}
+
+func (s *PostgresStorage) GetAccounts() ([]*Account, error) {
+	rows, err := s.db.Query("SELECT * FROM account")
+
+	if err != nil {
+		return nil, err
+	}
+
+	accounts := []*Account{}
+	for rows.Next() {
+		account := new(Account)
+		err := rows.Scan(
+			&account.ID,
+			&account.FirstName,
+			&account.LastName,
+			&account.Number,
+			&account.Balance,
+			&account.CreatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		accounts = append(accounts, account)
+	}
+
+	return accounts, nil
 }
