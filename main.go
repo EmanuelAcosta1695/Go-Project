@@ -2,9 +2,13 @@ package main
 
 import (
 	"log"
+	"os"
 )
 
 func main() {
+	log.SetOutput(os.Stdout)
+	log.Println("Starting application...")
+
 	store, err := NewPostgresStorage()
 
 	if err != nil {

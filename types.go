@@ -12,12 +12,13 @@ type CreateAccountRequest struct {
 
 // Default value for int64 is 0 in go
 type Account struct {
-	ID        int       `json:"id"`
-	FirstName string    `json:"firstName"`
-	LastName  string    `json:"lastName"`
-	Number    int64     `json:"number"`
-	Balance   int64     `json:"balance"`
-	CreatedAt time.Time `json:"created_at"`
+	ID            int       `json:"id"`
+	FirstName     string    `json:"firstName"`
+	LastName      string    `json:"lastName"`
+	Number        int64     `json:"number"`
+	Balance       int64     `json:"balance"`
+	CreatedAt     time.Time `json:"created_at"`
+	DeleteAccount bool      `json:"delete_account"`
 }
 
 func NewAccount(firstName, lastName string) *Account {

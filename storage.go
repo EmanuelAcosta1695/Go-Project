@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/lib/pq"
 )
@@ -45,7 +46,8 @@ func (s *PostgresStorage) createAccountTable() error {
 		last_name varchar(50),
 		number serial,
 		balance numeric,
-		created_at timestamp
+		created_at timestamp,
+		delete_account boolean default false
 	)`
 
 	_, err := s.db.Exec(query)
@@ -80,17 +82,28 @@ func (s *PostgresStorage) CreateAccount(account *Account) error {
 func (s *PostgresStorage) UpdateAccount(acount *Account) error {
 	return nil
 }
-
 func (s *PostgresStorage) DeleteAccount(id int) error {
+	result, err := s.db.Exec("UPDATE account SET delete_account = true WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	log.Printf("Rows affected by delete operation: %d", rowsAffected) // Add logging here
+	if rowsAffected == 0 {
+		log.Printf("No rows updated for account ID: %d", id)
+	} else {
+		log.Printf("Account ID %d marked as deleted", id)
+	}
 	return nil
 }
 
 func (s *PostgresStorage) GetAccountByID(id int) (*Account, error) {
-	rows, err := s.db.Query("SELECT * FROM account WHERE id = $1", id)
-
+	rows, err := s.db.Query("SELECT id, first_name, last_name, number, balance, created_at, delete_account FROM account WHERE id = $1", id)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		return scanIntoAccount(rows)
@@ -100,22 +113,31 @@ func (s *PostgresStorage) GetAccountByID(id int) (*Account, error) {
 }
 
 func (s *PostgresStorage) GetAccounts() ([]*Account, error) {
-	rows, err := s.db.Query("SELECT * FROM account")
-
+	rows, err := s.db.Query("SELECT id, first_name, last_name, number, balance, created_at, delete_account FROM account")
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	accounts := []*Account{}
+	var accounts []*Account
 	for rows.Next() {
-
-		account, err := scanIntoAccount(rows)
-
-		if err != nil {
+		var account Account
+		if err := rows.Scan(
+			&account.ID,
+			&account.FirstName,
+			&account.LastName,
+			&account.Number,
+			&account.Balance,
+			&account.CreatedAt,
+			&account.DeleteAccount,
+		); err != nil {
 			return nil, err
 		}
+		accounts = append(accounts, &account)
+	}
 
-		accounts = append(accounts, account)
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return accounts, nil
@@ -129,7 +151,8 @@ func scanIntoAccount(rows *sql.Rows) (*Account, error) {
 		&account.LastName,
 		&account.Number,
 		&account.Balance,
-		&account.CreatedAt)
-
+		&account.CreatedAt,
+		&account.DeleteAccount,
+	)
 	return account, err
 }
