@@ -67,8 +67,6 @@ func (s *APIServer) Run() {
 }
 
 func (s *APIServer) handleAccount(w http.ResponseWriter, r *http.Request) error {
-	log.Println("Handling account request")
-
 	if r.Method == "GET" {
 		return s.handleGetAccount(w, r)
 	}
